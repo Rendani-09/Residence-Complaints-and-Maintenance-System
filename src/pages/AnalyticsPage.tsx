@@ -6,6 +6,29 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const COLORS = ['hsl(262, 83%, 58%)', 'hsl(210, 80%, 55%)', 'hsl(38, 92%, 50%)', 'hsl(152, 60%, 42%)'];
 
+const getIntegerAxisTicks = (values: number[]) => {
+  const maxValue = Math.max(...values, 0);
+
+  if (maxValue <= 5) {
+    return {
+      domain: [0, Math.max(maxValue, 1)],
+      ticks: Array.from({ length: Math.max(maxValue, 1) + 1 }, (_, i) => i),
+    };
+  }
+
+  const step = Math.max(1, Math.ceil(maxValue / 5));
+  const upperBound = Math.ceil(maxValue / step) * step;
+  const ticks: number[] = [];
+
+  for (let value = 0; value <= upperBound; value += step) {
+    ticks.push(value);
+  }
+
+  return {
+    domain: [0, upperBound],
+    ticks,
+  };
+};
 const AnalyticsPage = () => {
   // Complaints per block (only blocks with complaints)
   const blockData = BLOCKS
@@ -25,6 +48,8 @@ const AnalyticsPage = () => {
     { name: 'Completed', value: mockComplaints.filter((c) => c.status === 'Completed').length },
   ];
 
+  const blockAxis = getIntegerAxisTicks(blockData.map((d) => d.count));
+  const statusAxis = getIntegerAxisTicks(statusData.map((d) => d.value));
   const STATUS_COLORS = ['hsl(38, 92%, 50%)', 'hsl(210, 80%, 55%)', 'hsl(152, 60%, 42%)'];
 
   return (
@@ -48,7 +73,13 @@ const AnalyticsPage = () => {
                 <BarChart data={blockData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(260, 15%, 90%)" />
                   <XAxis dataKey="name" fontSize={12} tick={{ fill: 'hsl(260, 10%, 45%)' }} />
-                  <YAxis fontSize={12} tick={{ fill: 'hsl(260, 10%, 45%)' }} />
+                  <YAxis
+                    fontSize={12}
+                    tick={{ fill: 'hsl(260, 10%, 45%)' }}
+                    allowDecimals={false}
+                    domain={blockAxis.domain}
+                    ticks={blockAxis.ticks}
+                  />
                   <Tooltip
                     contentStyle={{
                       borderRadius: '8px',
@@ -97,7 +128,14 @@ const AnalyticsPage = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={statusData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(260, 15%, 90%)" />
-                  <XAxis type="number" fontSize={12} tick={{ fill: 'hsl(260, 10%, 45%)' }} />
+                  <XAxis
+                    type="number"
+                    fontSize={12}
+                    tick={{ fill: 'hsl(260, 10%, 45%)' }}
+                    allowDecimals={false}
+                    domain={statusAxis.domain}
+                    ticks={statusAxis.ticks}
+                  />
                   <YAxis type="category" dataKey="name" fontSize={12} tick={{ fill: 'hsl(260, 10%, 45%)' }} width={80} />
                   <Tooltip />
                   <Bar dataKey="value" radius={[0, 4, 4, 0]}>
